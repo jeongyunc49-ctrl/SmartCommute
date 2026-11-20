@@ -530,14 +530,29 @@
         return;
       }
 
-      const oName = encodeURIComponent(globalOriginGeo.name || '출발지');
-      const dName = encodeURIComponent(globalDestGeo.name || '도착지');
+      // 장소명에 쉼표(,)나 슬래시(/)가 있으면 URL 파라미터가 깨지므로 공백으로 치환 후 인코딩
+      const oName = encodeURIComponent((globalOriginGeo.name || '출발지').replace(/[,/]/g, ' '));
+      const dName = encodeURIComponent((globalDestGeo.name || '도착지').replace(/[,/]/g, ' '));
 
       if (type === 'kakao') {
-        const url = `https://map.kakao.com/link/to/${dName},${globalDestGeo.lat},${globalDestGeo.lng}/from/${oName},${globalOriginGeo.lat},${globalOriginGeo.lng}`;
+        // currentMode에 따라 traffic(대중교통), walk(도보), car(자동차) 자동 분기
+        const kakaoBy = currentMode === 'TRANSIT'
+          ? 'traffic'
+          : currentMode === 'WALK_BARRIER_FREE'
+            ? 'walk'
+            : 'car';
+
+        const url = `https://map.kakao.com/link/by/${kakaoBy}/${oName},${globalOriginGeo.lat},${globalOriginGeo.lng}/${dName},${globalDestGeo.lat},${globalDestGeo.lng}`;
         window.open(url, '_blank');
       } else if (type === 'naver') {
-        const url = `https://map.naver.com/v5/directions/${globalOriginGeo.lng},${globalOriginGeo.lat},${oName}/${globalDestGeo.lng},${globalDestGeo.lat},${dName}/-/car`;
+        // currentMode에 따라 transit(대중교통), walk(도보), car(자동차) 자동 분기
+        const naverBy = currentMode === 'TRANSIT'
+          ? 'transit'
+          : currentMode === 'WALK_BARRIER_FREE'
+            ? 'walk'
+            : 'car';
+
+        const url = `https://map.naver.com/p/directions/${globalOriginGeo.lng},${globalOriginGeo.lat},${oName}/${globalDestGeo.lng},${globalDestGeo.lat},${dName}/-/${naverBy}`;
         window.open(url, '_blank');
       }
     }
